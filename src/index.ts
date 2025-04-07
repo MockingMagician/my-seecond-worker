@@ -13,6 +13,13 @@
  *
  * Learn more at https://developers.cloudflare.com/workers/
  */
+import {
+	AssistantCore,
+	AssistantRunner,
+	AssistantRunnerEvent,
+	ChatClientFactory, SuccessReturnValue,
+	ToolRegistry
+} from '@mockingmagician/assistant-runner';
 
 export default {
 	// Our fetch handler is invoked on a HTTP request: we can send a message to a queue
@@ -22,11 +29,46 @@ export default {
 		// To send a message on a queue, we need to create the queue first
 		// https://developers.cloudflare.com/queues/get-started/#3-create-a-queue
 		await env.MY_QUEUE.send({
-			url: req.url,
-			method: req.method,
-			headers: Object.fromEntries(req.headers),
+			body: JSON.stringify(req.body),
+			delay: 10,
+			priority: 1,
 		});
-		return new Response('Sent message to the queue');
+
+		const client = await ChatClientFactory.createClient({
+			provider: 'openai-like',
+			options: {
+				apiKey: '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',
+				baseURL: 'https://api.openai.com/v1',
+			}
+		})
+
+		const toolRegistry = new ToolRegistry();
+
+		const core = new AssistantCore({
+			client,
+			model: 'gpt-4.5-turbo',
+			maxTokens: 40000,
+			timeout: 1000,
+			initialMemory: [],
+			toolRegistry: toolRegistry
+		})
+		const ass = new AssistantRunner({
+			core,
+			memoryMaxTokens: 40000,
+		})
+
+		const promised = new Promise(resolve => {
+			ass.on(AssistantRunnerEvent.RESPONSE, (response) => {
+				console.log(response)
+				resolve(new Response(response.message))
+				return
+			})
+		})
+
+		await ass.run({
+			userMessage: 'salut'
+		})
+		return await promised as Awaited<Response>
 	},
 	// The queue handler is invoked when a batch of messages is ready to be delivered
 	// https://developers.cloudflare.com/queues/platform/javascript-apis/#messagebatch

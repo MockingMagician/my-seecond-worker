@@ -12,5 +12,9 @@
 		"@cloudflare/workers-types": "^4.20250407.0",
 		"typescript": "^5.5.2",
 		"wrangler": "^4.8.0"
+	},
+	"dependencies": {
+		"@mockingmagician/assistant-runner": "0.2.0",
+		"openai": "^4.92.1"
 	}
 }
