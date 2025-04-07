@@ -59,7 +59,7 @@ export default {
 		})
 
 		await ass.run({
-			userMessage: 'salut'
+			userMessage: 'C\'est quoi ton non ?'
 		})
 		return await promised as Awaited<Response>
 	},
