@@ -26,13 +26,6 @@ export default {
 	// during (or after) a request.
 	// https://developers.cloudflare.com/queues/platform/javascript-apis/#producer
 	async fetch(req, env, ctx): Promise<Response> {
-		// To send a message on a queue, we need to create the queue first
-		// https://developers.cloudflare.com/queues/get-started/#3-create-a-queue
-		await env.MY_QUEUE.send({
-			body: JSON.stringify(req.body),
-			delay: 10,
-			priority: 1,
-		});
 
 		const client = await ChatClientFactory.createClient({
 			provider: 'openai-like',
@@ -70,14 +63,4 @@ export default {
 		})
 		return await promised as Awaited<Response>
 	},
-	// The queue handler is invoked when a batch of messages is ready to be delivered
-	// https://developers.cloudflare.com/queues/platform/javascript-apis/#messagebatch
-	async queue(batch, env): Promise<void> {
-		// A queue consumer can make requests to other endpoints on the Internet,
-		// write to R2 object storage, query a D1 Database, and much more.
-		for (let message of batch.messages) {
-			// Process each message (we'll just log these)
-			console.log(`message ${message.id} processed: ${JSON.stringify(message.body)}`);
-		}
-	},
-} satisfies ExportedHandler<Env, Error>;
+}
